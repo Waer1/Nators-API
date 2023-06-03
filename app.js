@@ -12,7 +12,9 @@ const app = express();
 
 // MIDDLEWARES
 
-app.use(morgan('dev'));
+if (process.env.NODE_ENV !== 'production') {
+  app.use(morgan('dev'));
+}
 
 app.use(express.json());
 
