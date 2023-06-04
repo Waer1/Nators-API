@@ -19,34 +19,7 @@ mongoose
   .connect(DB_URL, {
     useNewUrlParser: true,
   })
-  .then(() => console.log('DB connection successful!'));
-
-const tourSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'A tour must have a name!'],
-    unique: true,
-  },
-  rating: {
-    type: Number,
-    default: 4.5,
-  },
-  price: {
-    type: Number,
-    required: [true, 'A tour must have a price!'],
-  },
-});
-
-const Tour = mongoose.model('Tour', tourSchema);
-
-const testTour = new Tour({
-  name: 'the Park Camper',
-  price: 998,
-});
-
-testTour
-  .save()
-  .then((doc) => console.log(doc))
+  .then(() => console.log('DB connection successful!'))
   .catch((err) => console.log(err));
 
 const port = process.env.PORT || 3000;
