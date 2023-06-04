@@ -118,7 +118,6 @@ tourSchema.pre('aggregate', function (next) {
       secretTour: { $ne: true },
     },
   });
-
   next();
 });
 
