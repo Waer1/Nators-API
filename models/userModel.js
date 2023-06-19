@@ -52,6 +52,16 @@ const userSchema = new mongoose.Schema({
   passwordResetTokenExpiration: {
     type: Date,
   },
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
+});
+
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+  next();
 });
 
 userSchema.pre('save', async function (next) {
@@ -72,7 +82,7 @@ userSchema.methods.correctPassword = async function (
   userPassword,
   HashedPassword
 ) {
-  return await bcrypt.hash(userPassword, HashedPassword);
+  return await bcrypt.compare(userPassword, HashedPassword);
 };
 
 // it should retun false if the token valid in terms of changePassword
