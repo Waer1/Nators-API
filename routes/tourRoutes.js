@@ -9,11 +9,11 @@ const {
   aliasTopTopCheapTours,
   getTourStats,
   getMonthlyStats,
-  // checkID,
-  // checkBody,
 } = require('../controllers/tourControllers');
 
 const tourRouter = express.Router();
+
+const { protect, restrictTo } = require('../controllers/authController');
 
 // usage of the middleware
 // tourRouter.param('id', checkID);
@@ -24,8 +24,12 @@ tourRouter.route('/monthly-stats/:year').get(getMonthlyStats);
 
 tourRouter.route('/top-5-tour').get(aliasTopTopCheapTours, getAllTours);
 
-tourRouter.route('/:id').get(getTour).patch(updateTour).delete(deleteTour);
+tourRouter
+  .route('/:id')
+  .get(getTour)
+  .patch(updateTour)
+  .delete(protect, restrictTo('admin', 'lead-guide'), deleteTour);
 
-tourRouter.route('/').get(getAllTours).post(addTour);
+tourRouter.route('/').get(protect, getAllTours).post(addTour);
 
 module.exports = tourRouter;

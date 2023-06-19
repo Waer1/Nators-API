@@ -36,9 +36,15 @@ const handleCastErrorDB = (err, res, next) => {
 
 const handleDBerrors = (err, res, next) => {
   const errors = Object.values(err.errors).map((el) => el.message);
-  console.log(err, errors);
   const message = `Invalid input data. ${errors.join('. ')}`;
   return new AppError(message, 400);
+};
+
+const handleJsonWebTokenError = () => {
+  return new AppError('the token is not valid', 401);
+};
+const handleTokenExpiredError = () => {
+  return new AppError('the token is expried', 401);
 };
 
 exports.globalErrorHandler = (err, req, res, next) => {
@@ -51,6 +57,11 @@ exports.globalErrorHandler = (err, req, res, next) => {
     let error = { ...err };
     if (err.name === 'CastError') error = handleCastErrorDB(err, res);
     else if (err.name === 'ValidationError') error = handleDBerrors(err, res);
+    else if (err.name === 'JsonWebTokenError')
+      error = handleJsonWebTokenError();
+    else if (err.name === 'TokenExpiredError')
+      error = handleTokenExpiredError();
+
     sendErrorProd(error, res);
   }
 };
