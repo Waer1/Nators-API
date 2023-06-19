@@ -118,6 +118,12 @@ const tourSchema = new mongoose.Schema(
         day: Number,
       },
     ],
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
@@ -127,6 +133,14 @@ const tourSchema = new mongoose.Schema(
 
 tourSchema.virtual('durationweeks').get(function () {
   return this.duration / 7;
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+  });
+
+  next();
 });
 
 // pre is work with save() and also create since it use save inside it but not working woth insertmany
