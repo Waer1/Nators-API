@@ -15,6 +15,35 @@ const verifyToken = (token) => {
   return jwt.verify(token, process.env.JWT_SECRET);
 };
 
+const extractPeriod = (str) => {
+  return str.replace(/.$/, '');
+};
+
+const createAndSendToken = (user, statuscode, res) => {
+  const token = signToken(user.id);
+
+  user.password = undefined;
+
+  const cookiesOptions = {
+    expires: new Date(
+      Date.now() +
+        extractPeriod(process.env.JWT_EXPIRE_IN) * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+  };
+  if (process.env.NODE_ENV === 'production') cookiesOptions.secure = true;
+
+  res.cookie('jwt', token, cookiesOptions);
+
+  res.status(statuscode).json({
+    status: 'success',
+    token: token,
+    date: {
+      user,
+    },
+  });
+};
+
 exports.createUser = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -24,15 +53,7 @@ exports.createUser = catchAsync(async (req, res, next) => {
     role: req.body.role,
   });
 
-  const token = signToken(newUser.id);
-
-  res.status(201).json({
-    status: 'success',
-    token: token,
-    date: {
-      user: newUser,
-    },
-  });
+  createAndSendToken(newUser, 201, res);
 });
 
 exports.signIn = catchAsync(async (req, res, next) => {
@@ -45,15 +66,11 @@ exports.signIn = catchAsync(async (req, res, next) => {
 
   // chack if the password is correct and the user exist
   const user = await User.findOne({ email: email }).select('+password');
-  if (!user || !user.correctPassword(password, user.password)) {
+  if (!user || !(await user.correctPassword(password, user.password))) {
     return next(new AppError('the email or the password are incorrect', 401));
   }
 
-  const token = signToken(user.id);
-  res.status(200).json({
-    status: 'success',
-    token: token,
-  });
+  createAndSendToken(user, 200, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -174,4 +191,25 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
     status: 'success',
     token: token,
   });
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  const targetUser = await User.findById(req.user.id).select('+password');
+
+  console.log(
+    req.body.password,
+    await targetUser.correctPassword(req.body.password, targetUser.password)
+  );
+  if (
+    !targetUser ||
+    !(await targetUser.correctPassword(req.body.password, targetUser.password))
+  ) {
+    return next(new Error('the password is incorrect', 401));
+  }
+
+  targetUser.password = req.body.newPassword;
+  targetUser.passwordConfirm = req.body.newPasswordConfirm;
+  await targetUser.save();
+
+  createAndSendToken(targetUser, 200, res);
 });
