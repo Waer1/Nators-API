@@ -8,8 +8,9 @@ const {
 } = require('./handlerFactory');
 
 exports.setTourUserId = (req, res, next) => {
-  if (!req.body.tour) req.body.tour = req.params.tourId;
+  if (!req.body.tour) req.body.tour = req.params.tourId;www
   req.body.user = req.user.id;
+  next();
 };
 
 exports.getAllReviews = getAll(Review);

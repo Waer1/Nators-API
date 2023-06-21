@@ -28,7 +28,7 @@ exports.updateOne = (model) =>
     );
 
     if (!updatedDocument) {
-      return next(new AppError('No tour found with that ID', 404));
+      return next(new AppError('No Document found with that ID', 404));
     }
 
     res.status(200).json({
@@ -42,9 +42,8 @@ exports.updateOne = (model) =>
 exports.createOne = (model) =>
   catchAsync(async (req, res, next) => {
     const newDocument = await model.create(req.body);
-
-    if (!newTour) {
-      return next(new AppError('No tour found with that ID', 404));
+    if (!newDocument) {
+      return next(new AppError('No Document found with that ID', 404));
     }
 
     res.status(201).json({
