@@ -2,7 +2,7 @@ const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
 const jwt = require('jsonwebtoken');
 const AppError = require('../utils/appError');
-const sendEmail = require('../utils/sendEmail');
+const Email = require('../utils/sendEmail');
 const crypto = require('crypto');
 
 const signToken = (id) => {
@@ -52,6 +52,9 @@ exports.createUser = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
     role: req.body.role,
   });
+
+  const email = new Email(newUser, `${req.protocol}://${req.get(host)}/me`);
+  await email.sendWelcome();
 
   createAndSendToken(newUser, 201, res);
 });
@@ -146,7 +149,7 @@ exports.forgetPassword = catchAsync(async (req, res, next) => {
   const resetUrl = `${req.protocol}://${req.get(
     'host'
   )}/api/vi/resetPassword/${resetToken}`;
-  const message = `forgot your password, submit a patch request to reset your password on ${resetUrl}, if you didint forget it just ignor this message`;
+  await new Email(targetUser, resetUrl).sendPasswordRsest();
 
   // send the reset token to the user
   const options = {

@@ -29,7 +29,7 @@ module.exports = class Email {
   }
   async send(template, subject) {
     // render the html html
-    const html = pug.render(`${__dirname}/../views/email/welcome.pug`, {
+    const html = pug.render(`${__dirname}/../views/email/${template}.pug`, {
       firstName: this.firstName,
       url: this.url,
       subject: subject,
@@ -49,6 +49,13 @@ module.exports = class Email {
   }
 
   async sendWelcome() {
-    await this.send('Welcome!!', 'Welcome to the nators family!');
+    await this.send('Welcome', 'Welcome to the nators family!');
+  }
+
+  async sendPasswordRsest() {
+    await this.send(
+      'passwordReset',
+      'your password reset token its only valid for 10 mins'
+    );
   }
 };
