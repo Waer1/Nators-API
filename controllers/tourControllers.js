@@ -4,28 +4,34 @@ const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const { deleteOne, getOne, getAll } = require('./handlerFactory');
 
-// middleware for
-// exports.checkBody = (req, res, next) => {
-//   if (!req.body.price || !req.body.name) {
-//     return res.status(404).json({
-//       status: 'fail',
-//       message: 'Invalid tour price or name',
-//     });
-//   }
-//   next();
-// };
+// /tour-witnin/:distance/center/:lat,lng/unit/:unit
+// /tour-witnin/200/center/34.81,-118.113/unit/mi
 
-// used as middleware
-// exports.checkID = (req, res, next, val) => {
-//   if (!toursData[val]) {
-//     return res.status(404).json({
-//       status: 'fail',
-//       message: 'Invalid ID',
-//     });
-//   }
+exports.getTourWithin = catchAsync(async (req, res, next) => {
+  const { distance, latlng, unit } = req.params;
+  const [lat, lng] = latlng.split(',');
+  const Radius = unit == -'mi' ? distance / 3963.2 : distance / 6378.1;
 
-//   next();
-// };
+  if (!lat || !lng)
+    return next(
+      new AppError(
+        'Please provide latitude and longitude in the format lat,lng',
+        400
+      )
+    );
+
+  const tours = await Tours.find({
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], Radius] } },
+  });
+
+  res.status(200).json({
+    status: 'success',
+    results: tours.length,
+    data: {
+      data: tours,
+    },
+  });
+});
 
 exports.aliasTopTopCheapTours = (req, res, next) => {
   req.query.limit = '5';

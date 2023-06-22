@@ -2,9 +2,8 @@ const User = require('../models/userModel');
 const AppError = require('../utils/appError');
 const catchAsync = require('../utils/catchAsync');
 const { deleteOne, updateOne, getOne, getAll } = require('./handlerFactory');
-
-// USER ROUTE HANDLERS
-exports.getAllUsers = getAll(User);
+const multer = require('multer');
+const sharp = require('sharp');
 
 const filerObj = (obj, ...allowedFields) => {
   const filterdObj = {};
@@ -14,6 +13,45 @@ const filerObj = (obj, ...allowedFields) => {
   });
 
   return filterdObj;
+};
+
+// const multerStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'public/img/users');
+//   },
+//   filename: (req, file, cb) => {
+//     const ext = file.mimetype.split('/')[1];
+//     cb(null, `user-${req.user.id}-${Date.now()}.${ext}`);
+//   },
+// });
+
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images.', 400), true);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+
+exports.uploadUserPhoto = upload.single('photo');
+
+exports.resizeUserPhoto = (req, res, next) => {
+  if (!req.file) next();
+  req.file.filename = `user-${req.user.id}-${Date.now()}.${ext}`;
+  sharp(req.file.buffer)
+    .resize(500, 500)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/users/${req.file.filename}`);
+
+  next();
 };
 
 exports.updateMe = catchAsync(async (req, res, next) => {
@@ -27,7 +65,9 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   }
 
   const filterdObj = filerObj(req.body, 'name', 'email');
-  console.log(filterdObj);
+
+  if (req.file) filterdObj.photo = req.file.filename;
+
   const updatedUser = await User.findByIdAndUpdate(req.user.id, filterdObj, {
     new: true,
     runValidators: true,
@@ -67,3 +107,4 @@ exports.getMe = catchAsync(async (req, res, next) => {
 exports.deleteUser = deleteOne(User);
 exports.updateUser = updateOne(User);
 exports.getUser = getOne(User);
+exports.getAllUsers = getAll(User);

@@ -9,6 +9,8 @@ const {
   updateMe,
   deleteMe,
   getMe,
+  uploadUserPhoto,
+  resizeUserPhoto,
 } = require('../controllers/userControllers');
 
 const {
@@ -31,7 +33,7 @@ userRouter.route('/resetPassword/:token').patch(resetPassword);
 userRouter.use(protect);
 
 userRouter.route('/updatePassword').patch(updatePassword);
-userRouter.route('/updateMe').patch(updateMe);
+userRouter.route('/updateMe').patch(uploadUserPhoto, resizeUserPhoto, updateMe);
 userRouter.route('/deleteMe').delete(deleteMe);
 userRouter.route('/me').get(getMe, getUser);
 
