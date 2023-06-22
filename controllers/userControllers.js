@@ -42,17 +42,18 @@ const upload = multer({
 
 exports.uploadUserPhoto = upload.single('photo');
 
-exports.resizeUserPhoto = (req, res, next) => {
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
   if (!req.file) next();
+  const ext = req.file.mimetype.split('/')[1];
   req.file.filename = `user-${req.user.id}-${Date.now()}.${ext}`;
-  sharp(req.file.buffer)
+  await sharp(req.file.buffer)
     .resize(500, 500)
     .toFormat('jpeg')
     .jpeg({ quality: 90 })
     .toFile(`public/img/users/${req.file.filename}`);
 
   next();
-};
+});
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   if (req.body.passwordConfim || req.body.password) {

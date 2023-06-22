@@ -9,6 +9,9 @@ const {
   aliasTopTopCheapTours,
   getTourStats,
   getMonthlyStats,
+  uploadTourPhoto,
+  uploadTourImages,
+  resizeTourimages,
 } = require('../controllers/tourControllers');
 
 const tourRouter = express.Router();
@@ -35,7 +38,13 @@ tourRouter
 tourRouter
   .route('/:id')
   .get(getTour)
-  .patch(protect, restrictTo('admin', 'lead-guide'), updateTour)
+  .patch(
+    protect,
+    restrictTo('admin', 'lead-guide'),
+    uploadTourImages,
+    resizeTourimages,
+    updateTour
+  )
   .delete(protect, restrictTo('admin', 'lead-guide'), deleteTour);
 
 tourRouter
